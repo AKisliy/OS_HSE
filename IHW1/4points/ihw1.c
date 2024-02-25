@@ -136,7 +136,7 @@ int main(int argc, char** argv){
                 exit(-1);
             }
             ssize_t readFromPipe = read(fdReaderHandler[0],infoFromPipe, size);
-            printf("read from pipe: %s", infoFromPipe);
+            //printf("read from pipe: %s", infoFromPipe);
             if(readFromPipe < 0){
                 printf("Can\'t read string from pipe\n");
                 exit(-1);
@@ -166,7 +166,7 @@ int main(int argc, char** argv){
             exit(-1);
         }
         ssize_t readFromPipe = read(fdHandlerWriter[0],infoFromPipe, size);
-        printf("write to file read from pipe: %s", infoFromPipe);
+        //printf("write to file read from pipe: %s", infoFromPipe);
         if(readFromPipe < 0){
             printf("Can\'t read string from pipe\n");
             exit(-1);
