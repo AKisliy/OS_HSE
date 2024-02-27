@@ -111,11 +111,6 @@ int main(int argc, char** argv){
         printf("Can\'t fork child\n");
         exit(-1);
     } else if (pid > 0){ // let's assume that parent will read information from file and then write it
-        int readerHandler = fork();
-        if(readerHandler < 0){
-            printf("Can\'t fork child\n");
-            exit(-1);
-        } else if(readerHandler > 0){ // we are parent now, let's read info and write to pipe
             ssize_t readFromFile = readInformation(input, buffer, size);
             
             if(close(fd_reader2Handler[0]) < 0){
@@ -151,7 +146,6 @@ int main(int argc, char** argv){
                 printf("Can\'t close pipe");
                 exit(-1);
             }
-        } 
     } else { // child will be the handler
             char infoFromPipe[size];
             // close reading part 
