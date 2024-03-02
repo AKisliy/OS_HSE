@@ -94,7 +94,6 @@ int main(int argc, char** argv){
     char converterToWriter[] = "mysecondpipe.fifo";
     char buffer[size];
     
-    int fdHandlerWriter[2]; // pipe's descriptors for handler -> writer
     mknod(readerToConverter, S_IFIFO | 0666, 0);
     mknod(converterToWriter, S_IFIFO | 0666, 0);
     

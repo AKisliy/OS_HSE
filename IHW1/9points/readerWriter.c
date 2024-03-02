@@ -8,7 +8,7 @@
 #include <ctype.h>
 #include <string.h>
 
-const int size = 5000;
+const int size = 128;
 
 ssize_t readInformation(char* path, char* dest, int size){
     int fd;
@@ -59,48 +59,80 @@ int main(int argc, char** argv){
     char* input = argv[1];
     char* output = argv[2];
 
-    char buffer[size];
+    char buffer[size + 1];
 
     char reader2Handler[] = "p1.fifo";
     char handler2Reader[] = "p2.fifo";
-    int fd;
+    int fd, fdInput, fdOutput;
+    ssize_t read_bytes;
 
     mknod(reader2Handler, S_IFIFO | 0666, 0);
     mknod(handler2Reader, S_IFIFO | 0666, 0);
-    
-    ssize_t readFromFile = readInformation(input, buffer, size);
+    // descriptors for file and FIFO
     if((fd = open(reader2Handler, O_WRONLY)) < 0){
       printf("Can\'t open FIFO for writting\n");
       exit(-1);
    }
-
-    size_t written = write(fd, buffer, readFromFile);
-    if(written != readFromFile){
-        printf("Can\'t write all string to FIFO\n");
+    if((fdInput = open(input, O_RDONLY)) < 0){
+      printf("Can\'t open file\n");
+      exit(-1);
+    }
+    if((fdOutput = open(output, O_WRONLY | O_CREAT, 0666)) < 0){
+        printf("Can't open file for writing!\n");
         exit(-1);
     }
+
+    do {
+      read_bytes = read(fdInput, buffer, size);
+      if(read_bytes == -1) {
+        printf("Can\'t write this file\n");
+        exit(-1);
+      }
+      buffer[read_bytes] = '\0';
+      size_t written = write(fd, buffer, read_bytes);
+      if(written != read_bytes){
+          printf("Can\'t write all string to FIFO\n");
+          exit(-1);
+      }
+      // write(1, buffer, read_bytes);
+    } while(read_bytes == size);
+    
     if(close(fd) < 0) {
         printf("reader: Can\'t close FIFO\n");
         exit(-1);
     }
+
+    if(close(fdInput) < 0) {
+      printf("Can\'t close file\n");
+    }
+    
     if((fd = open(handler2Reader, O_RDWR)) < 0){
         printf("Can\'t open FIFO for reading\n");
         exit(-1);
     }
-    char infoFromHandler[size * 4];
-    ssize_t readFromHandler = read(fd, infoFromHandler, size * 4);
-    if(readFromHandler < 0){
-        printf("Can\'t read string from FIFO\n");
-        exit(-1);
-    }
-
-    ssize_t writeToFile = writeInformation(output, infoFromHandler, readFromHandler);
-    if(writeToFile < readFromHandler){
-        printf("Can\'t write everything to file");
-        exit(-1);
-    }
+    
+    char infoFromHandler[size + 1];
+    do {
+        read_bytes = read(fd, infoFromHandler, size);
+        if(read_bytes <= 0){
+            printf("Can\'t read string from FIFO\n");
+            exit(-1);
+        }
+        infoFromHandler[read_bytes] = '\0';
+        ssize_t written = write(fdOutput, infoFromHandler, read_bytes);
+        if(written != read_bytes){
+            printf("Can't write all string!\n");
+            exit(-1);
+        }
+        printf("%s\n", infoFromHandler);
+    } while (read_bytes == size);
+    
     if(close(fd) < 0){
         printf("Can\'t close FIFO");
+        exit(-1);
+    }
+    if(close(fdOutput) < 0){
+        printf("Can\'t close file for writing");
         exit(-1);
     }
 }
