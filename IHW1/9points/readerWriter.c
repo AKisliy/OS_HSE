@@ -10,45 +10,6 @@
 
 const int size = 128;
 
-ssize_t readInformation(char* path, char* dest, int size){
-    int fd;
-    if((fd = open(path, O_RDONLY)) < 0){
-      printf("Can\'t open file\n");
-      exit(-1);
-    }
-    ssize_t read_bytes = read(fd, dest, size);
-    if(read_bytes == -1){
-        printf("Can\'t read from the file\n");
-        exit(-1);
-    }
-    dest[read_bytes] = '\0';
-    if(close(fd) < 0){
-        printf("Can\'t close file\n");
-        exit(-1);
-    }
-    return read_bytes;
-}
-
-ssize_t writeInformation(char* path,char* buffer, size_t size){
-    int fdWrite;
-    if((fdWrite = open(path, O_WRONLY | O_CREAT, 0666)) < 0){
-        printf("Can't open file for writing!\n");
-        exit(-1);
-    }
-    
-    ssize_t written = write(fdWrite, buffer, size);
-    if(written != size){
-        printf("Can't write all string!\n");
-        exit(-1);
-    }
-    
-    if(close(fdWrite) < 0){
-        printf("Can\'t close file\n");
-        exit(-1);
-    }
-    return written;
-}
-
 int main(int argc, char** argv){
     if(argc < 3){
         printf("Not enough arguments to complete task!");
@@ -89,8 +50,8 @@ int main(int argc, char** argv){
         exit(-1);
       }
       buffer[read_bytes] = '\0';
-      size_t written = write(fd, buffer, read_bytes);
-      if(written != read_bytes){
+      size_t written = write(fd, buffer, read_bytes + 1);
+      if(written != read_bytes + 1){
           printf("Can\'t write all string to FIFO\n");
           exit(-1);
       }
@@ -123,6 +84,9 @@ int main(int argc, char** argv){
         if(written != read_bytes){
             printf("Can't write all string!\n");
             exit(-1);
+        }
+        if(read_bytes < size){
+            write(fdOutput, "\0", 1);
         }
         printf("%s\n", infoFromHandler);
     } while (read_bytes == size);
